@@ -139,6 +139,7 @@ dmypy.json
 carla
 data
 outputs
+etc
 checkpoints*
 start*.py
 max_num_job.txt

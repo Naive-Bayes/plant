@@ -21,7 +21,7 @@ hydra:
 
 repetitions: 1
 track: MAP
-resume: 0
+resume: 1
 save_path: TEST_EVAL
 log_save_path: result_logs
 checkpoint_file: results.json

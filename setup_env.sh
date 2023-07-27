@@ -1,4 +1,4 @@
-conda env create -f environment.yml
+# conda env create -f environment.yml
 # conda activate plant
 
 pwd_root=$(pwd)
@@ -9,7 +9,7 @@ mkdir -p ./etc/conda/deactivate.d
 touch ./etc/conda/activate.d/env_vars.sh
 touch ./etc/conda/deactivate.d/env_vars.sh
 
-echo "export CARLA_ROOT=${pwd_root}/carla" >> ./etc/conda/activate.d/env_vars.sh
+echo "export CARLA_ROOT=/home/shannon/Carla_0.9.10.1" >> ./etc/conda/activate.d/env_vars.sh
 echo "export CARLA_SERVER=\${CARLA_ROOT}/CarlaUE4.sh" >> ./etc/conda/activate.d/env_vars.sh
 echo "export PYTHONPATH=\$PYTHONPATH:\${CARLA_ROOT}/PythonAPI" >> ./etc/conda/activate.d/env_vars.sh
 echo "export PYTHONPATH=\$PYTHONPATH:\${CARLA_ROOT}/PythonAPI/carla" >> ./etc/conda/activate.d/env_vars.sh
@@ -27,7 +27,7 @@ touch ./carla_agent_files/config/user/$USER.yaml
 touch ./training/config/user/$USER.yaml
 echo "working_dir: $pwd_root" >> ./carla_agent_files/config/user/$USER.yaml
 echo "working_dir: $pwd_root" >> ./training/config/user/$USER.yaml
-echo "carla_path: $pwd_root/carla" >> ./carla_agent_files/config/user/$USER.yaml
+echo "carla_path: /home/shannon/Carla_0.9.10.1" >> ./carla_agent_files/config/user/$USER.yaml
 
 # conda deactivate
 # conda activate plant

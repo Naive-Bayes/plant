@@ -23,7 +23,7 @@ dependencies:
   - cffi=1.14.5=py37h261ae71_0
   - click=8.0.1=pyhd3eb1b0_0
   - cryptography=3.4.7=py37hd23ed53_0
-  - cudatoolkit=10.2.89=hfd86e86_1
+  # - cudatoolkit=10.2.89=hfd86e86_1
   - cycler=0.10.0=py37_0
   - dbus=1.13.18=hb2f20db_0
   - decorator=4.4.2=pyhd3eb1b0_0
