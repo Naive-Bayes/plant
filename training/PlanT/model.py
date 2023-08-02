@@ -45,11 +45,28 @@ class HFLM(nn.Module):
 
         # sequence padding for batching
         self.cls_emb = nn.Parameter(
-            torch.randn(1, self.num_attributes + 1)
+            # torch.randn(1, self.num_attributes + 1)
+            torch.randn(10, self.num_attributes + 1)
+            # torch.randn(self.config_all.model.training.pred_len, self.num_attributes + 1)
         )  # +1 because at this step we still have the type indicator
-        self.eos_emb = nn.Parameter(
-            torch.randn(1, self.num_attributes + 1)
-        )  # unnecessary TODO: remove
+        # self.eos_emb = nn.Parameter(
+        #     torch.randn(1, self.num_attributes + 1)
+        # )  # unnecessary TODO: remove
+
+        ############################## query_wp ################################
+        # self.target_emb = nn.ModuleList(
+        #     [nn.Linear(2, n_embd) for _ in range(self.config_all.model.training.pred_len)]
+        # )
+
+        # self.light_emb = nn.Parameter(torch.randn(1,n_embd))
+        # self.light_stop_emb = nn.Parameter(torch.randn(1,n_embd))
+
+        # self.decode = nn.ModuleList(
+        #     [nn.Linear(n_embd, 2) for _ in range(self.config_all.model.training.pred_len)]
+        # )
+        ############################## query_wp ################################
+
+        self.eval_net = nn.Linear(n_embd, 1)
 
         # token embedding
         self.tok_emb = nn.Linear(self.num_attributes, n_embd)
@@ -217,6 +234,26 @@ class HFLM(nn.Module):
         ]
         embedding = torch.sum(torch.stack(embedding, dim=1), dim=1)
 
+        ############################## query_wp ################################
+        # light_emb = self.light_emb.unsqueeze(0).expand(B,-1,-1)
+        # light_stop_emb = self.light_stop_emb.unsqueeze(0).expand(B,-1,-1)
+
+        # embedding = torch.cat([embedding, light_emb, light_stop_emb], dim=1)
+
+        # light_mask = torch.ones_like(embedding)
+        # for i in range(B):
+        #     if light_hazard[i][0].cpu == torch.tensor([False]):
+        #         light_mask[:,-1,:] = 0
+        #     else:
+        #         light_mask[:,-2,:] = 0
+        
+        # embedding = embedding * light_mask
+
+        # for i in range(self.config_all.model.training.pred_len):
+        #     target_embedding = self.target_emb[i](target_point)
+        #     embedding[:,i] = embedding[:,i] + target_embedding
+        ############################## query_wp ################################
+
         # embedding dropout
         x = self.drop(embedding)
 
@@ -235,6 +272,7 @@ class HFLM(nn.Module):
             # we do forecasting only for vehicles
             logits = [
                 self.heads[i](x) * car_mask_output - 999 * non_car_mask_output
+                # self.heads[i](x[:,0:-2,:]) * car_mask_output - 999 * non_car_mask_output
                 for i in range(self.num_attributes)
             ]
             logits = [
@@ -262,7 +300,22 @@ class HFLM(nn.Module):
             logits = None
 
         # get waypoint predictions
-        z = self.wp_head(x[:, 0, :])
+
+        _, _, hidden_dim = x.shape
+        weights = self.eval_net(x[:, 0:10, :]).squeeze(dim=-1)
+        weights = F.relu(weights)
+        if self.training:
+            weights = F.gumbel_softmax(weights, hard=True, dim=-1)
+        else:
+            weights = torch.argmax(weights, dim=1)
+            weights = F.one_hot(weights, num_classes = 10)
+        
+        weights = weights.unsqueeze(dim=-1).expand(-1,-1,hidden_dim)
+        
+        query = (weights * x[:, 0:10, :]).sum(dim=1)
+
+        # z = self.wp_head(x[:, 0, :])
+        z = self.wp_head(query)
         # add traffic ligth flag
         z = torch.cat((z, light_hazard), 1)
 
@@ -279,6 +332,13 @@ class HFLM(nn.Module):
             dx = self.wp_output(z)
             x = dx + x
             output_wp.append(x)
+
+        ############################## query_wp ################################
+        # output_wp = list()
+        # for i in range(self.config_all.model.training.pred_len):
+        #     output = self.decode[i](x[:,i,:])
+        #     output_wp.append(output)
+        ############################## query_wp ################################
 
         pred_wp = torch.stack(output_wp, dim=1)
 
@@ -312,7 +372,8 @@ class HFLM(nn.Module):
             # get the batch of types
             x_tokens_batch = x_tokens[x_batch_id_mask]
 
-            x_seq = torch.cat([self.cls_emb, x_tokens_batch, self.eos_emb], dim=0)
+            # x_seq = torch.cat([self.cls_emb, x_tokens_batch, self.eos_emb], dim=0)
+            x_seq = torch.cat([self.cls_emb, x_tokens_batch], dim=0)
 
             input_batch.append(x_seq)
 

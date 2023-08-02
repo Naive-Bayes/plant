@@ -1,13 +1,13 @@
 defaults:
-  - user: max_mustermann
+  - user: shannon
   - experiments: PlanTmedium3x
   - eval: longest6
 
 save_explainability_viz: False
 
 host: localhost
-port: 2000
-trafficManagerPort: 8000
+port: 2020
+trafficManagerPort: 8020
 trafficManagerSeed: 0
 dataProviderSeed: 0
 debug: 0
@@ -22,7 +22,7 @@ hydra:
 repetitions: 1
 track: MAP
 resume: 1
-save_path: TEST_EVAL
+save_path: test_eval_049
 log_save_path: result_logs
 checkpoint_file: results.json
 checkpoint: ${experiments.agent_root}/${save_path}/${checkpoint_file}

@@ -26,7 +26,7 @@ overfit: 0
 resume: True
 use_caching: True
 custom_sampler: False
-gpus: 2
+gpus: 1
 trainset_size: 3
 benchmark: longest6
 
